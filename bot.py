@@ -54,11 +54,6 @@ def format_call(call):
 MINI_APP_URL = os.environ.get("MINI_APP_URL", "")
 
 def main_menu_keyboard():
-    if MINI_APP_URL:
-        return InlineKeyboardMarkup([
-            [InlineKeyboardButton("📞 Назначить звонок", web_app=WebAppInfo(url=MINI_APP_URL))],
-            [InlineKeyboardButton("📋 Предстоящие звонки", callback_data="list_calls")],
-        ])
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("📞 Назначить звонок", callback_data="new_call")],
         [InlineKeyboardButton("📋 Предстоящие звонки", callback_data="list_calls")],

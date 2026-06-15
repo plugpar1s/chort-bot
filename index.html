@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Назначить звонок</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  :root {
+    --bg: #0F0F0F;
+    --bg2: #1A1A1A;
+    --bg3: #242424;
+    --border: rgba(255,255,255,0.08);
+    --text: #FFFFFF;
+    --text2: rgba(255,255,255,0.5);
+    --accent: #6C63FF;
+    --accent2: #8B85FF;
+    --success: #34C759;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+    min-height: 100vh;
+    padding: 0 0 100px;
+  }
+
+  .header {
+    padding: 24px 20px 16px;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+  .header p {
+    font-size: 14px;
+    color: var(--text2);
+    margin-top: 4px;
+  }
+
+  .section {
+    padding: 20px 20px 0;
+  }
+  .section-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 10px;
+  }
+
+  .date-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .date-btn {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .date-btn .day-name {
+    font-size: 11px;
+    color: var(--text2);
+    display: block;
+    margin-bottom: 2px;
+  }
+  .date-btn .day-num {
+    font-size: 18px;
+    font-weight: 600;
+    display: block;
+  }
+  .date-btn .month {
+    font-size: 11px;
+    color: var(--text2);
+    display: block;
+  }
+  .date-btn.selected {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .date-btn.selected .day-name,
+  .date-btn.selected .month {
+    color: rgba(255,255,255,0.7);
+  }
+  .date-btn.today .day-num { color: var(--accent2); }
+  .date-btn.selected.today .day-num { color: #fff; }
+
+  .custom-date-btn {
+    width: 100%;
+    background: var(--bg2);
+    border: 0.5px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    color: var(--text2);
+    font-size: 14px;
+    cursor: pointer;
+    text-align: center;
+    margin-top: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .custom-date-btn.active {
+    border-style: solid;
+    border-color: var(--accent);
+    color: var(--accent2);
+  }
+
+  .time-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .time-btn {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 4px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .time-btn.selected {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .custom-input-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    align-items: center;
+  }
+  .custom-input {
+    flex: 1;
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    color: var(--text);
+    font-size: 15px;
+    outline: none;
+  }
+  .custom-input:focus {
+    border-color: var(--accent);
+  }
+  .custom-input::placeholder { color: var(--text2); }
+
+  .member-card {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .member-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .member-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .avatar-purple { background: rgba(108,99,255,0.2); color: var(--accent2); }
+  .avatar-teal { background: rgba(29,158,117,0.2); color: #1D9E75; }
+  .avatar-coral { background: rgba(216,90,48,0.2); color: #D85A30; }
+  .member-name {
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .task-input {
+    width: 100%;
+    background: var(--bg3);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    resize: none;
+    min-height: 60px;
+    font-family: inherit;
+    line-height: 1.4;
+  }
+  .task-input:focus { border-color: var(--accent); }
+  .task-input::placeholder { color: var(--text2); }
+
+  .reminder-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .reminder-btn {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .reminder-btn .check {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 10px;
+  }
+  .reminder-btn.selected {
+    border-color: var(--accent);
+    background: rgba(108,99,255,0.1);
+  }
+  .reminder-btn.selected .check {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  .bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 20px 24px;
+    background: linear-gradient(to bottom, transparent, var(--bg) 30%);
+  }
+  .submit-btn {
+    width: 100%;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius);
+    padding: 16px;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .submit-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  .submit-btn:active:not(:disabled) { opacity: 0.85; }
+
+  .divider { height: 20px; }
+
+  .success-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    padding: 40px 20px;
+    text-align: center;
+  }
+  .success-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(52,199,89,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin-bottom: 20px;
+  }
+  .success-screen h2 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+  .success-screen p { font-size: 15px; color: var(--text2); line-height: 1.5; }
+  .call-preview {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-top: 20px;
+    text-align: left;
+    width: 100%;
+  }
+  .call-preview .datetime {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--accent2);
+  }
+  .task-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+  .task-row .who { color: var(--text2); min-width: 60px; }
+  .task-row .what { color: var(--text); }
+</style>
+</head>
+<body>
+
+<div id="main-screen">
+  <div class="header">
+    <h1>Некст звонок 📞</h1>
+    <p>Назначь дату, время и задачи</p>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Дата</div>
+    <div class="date-grid" id="date-grid"></div>
+    <button class="custom-date-btn" id="custom-date-btn" onclick="toggleCustomDate()">
+      + Другая дата
+    </button>
+    <div id="custom-date-row" class="custom-input-row" style="display:none;">
+      <input class="custom-input" type="date" id="custom-date-input" onchange="selectCustomDate(this.value)">
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="section">
+    <div class="section-label">Время</div>
+    <div class="time-grid" id="time-grid"></div>
+    <div class="custom-input-row" style="margin-top:8px;">
+      <input class="custom-input" type="time" id="custom-time-input" placeholder="Другое время" oninput="selectCustomTime(this.value)">
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="section">
+    <div class="section-label">Напомнить</div>
+    <div class="reminder-grid" id="reminder-grid"></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="section">
+    <div class="section-label">Задачи</div>
+    <div id="members-list"></div>
+  </div>
+</div>
+
+<div id="success-screen" class="success-screen">
+  <div class="success-icon">✓</div>
+  <h2>Звонок назначен!</h2>
+  <p>Я напомню всем заранее</p>
+  <div class="call-preview" id="call-preview"></div>
+</div>
+
+<div class="bottom-bar">
+  <button class="submit-btn" id="submit-btn" onclick="submitCall()">
+    Назначить звонок
+  </button>
+</div>
+
+<script>
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+
+const DAYS = ['вс','пн','вт','ср','чт','пт','сб'];
+const MONTHS = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+const TIMES = ['13:00','14:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00','23:00'];
+const REMINDERS = [
+  { label: 'За 10 минут', val: '10m' },
+  { label: 'За 30 минут', val: '30m' },
+  { label: 'За 1 час',    val: '1h'  },
+  { label: 'За 3 часа',   val: '3h'  },
+  { label: 'За 24 часа',  val: '24h' },
+];
+const MEMBERS = [
+  { name: 'Никита', initials: 'Н', cls: 'avatar-purple' },
+  { name: 'Рагнар', initials: 'Р', cls: 'avatar-teal' },
+  { name: 'Алекс',  initials: 'А', cls: 'avatar-coral' },
+];
+
+let state = {
+  date: null,
+  time: null,
+  reminders: ['1h', '10m'],
+  tasks: {},
+};
+
+function buildDates() {
+  const grid = document.getElementById('date-grid');
+  const now = new Date();
+  for (let i = 0; i < 8; i++) {
+    const d = new Date(now);
+    d.setDate(now.getDate() + i);
+    const iso = d.toISOString().slice(0,10);
+    const btn = document.createElement('div');
+    btn.className = 'date-btn' + (i === 0 ? ' today' : '');
+    btn.dataset.val = iso;
+    btn.innerHTML = `
+      <span class="day-name">${i === 0 ? 'сег' : i === 1 ? 'завт' : DAYS[d.getDay()]}</span>
+      <span class="day-num">${d.getDate()}</span>
+      <span class="month">${MONTHS[d.getMonth()]}</span>
+    `;
+    btn.onclick = () => selectDate(iso, btn);
+    grid.appendChild(btn);
+  }
+}
+
+function selectDate(val, btn) {
+  state.date = val;
+  document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('selected'));
+  if (btn) btn.classList.add('selected');
+  document.getElementById('custom-date-btn').classList.remove('active');
+  document.getElementById('custom-date-row').style.display = 'none';
+  updateSubmit();
+}
+
+function toggleCustomDate() {
+  const row = document.getElementById('custom-date-row');
+  const btn = document.getElementById('custom-date-btn');
+  const visible = row.style.display !== 'none';
+  row.style.display = visible ? 'none' : 'flex';
+  btn.classList.toggle('active', !visible);
+  if (!visible) document.getElementById('custom-date-input').focus();
+}
+
+function selectCustomDate(val) {
+  if (!val) return;
+  state.date = val;
+  document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('custom-date-btn').classList.add('active');
+  updateSubmit();
+}
+
+function buildTimes() {
+  const grid = document.getElementById('time-grid');
+  TIMES.forEach(t => {
+    const btn = document.createElement('div');
+    btn.className = 'time-btn';
+    btn.dataset.val = t;
+    btn.textContent = t;
+    btn.onclick = () => selectTime(t, btn);
+    grid.appendChild(btn);
+  });
+}
+
+function selectTime(val, btn) {
+  state.time = val;
+  document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
+  if (btn) btn.classList.add('selected');
+  document.getElementById('custom-time-input').value = '';
+  updateSubmit();
+}
+
+function selectCustomTime(val) {
+  if (!val) return;
+  state.time = val;
+  document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
+  updateSubmit();
+}
+
+function buildReminders() {
+  const grid = document.getElementById('reminder-grid');
+  REMINDERS.forEach(r => {
+    const btn = document.createElement('div');
+    btn.className = 'reminder-btn' + (state.reminders.includes(r.val) ? ' selected' : '');
+    btn.dataset.val = r.val;
+    btn.innerHTML = `<div class="check">${state.reminders.includes(r.val) ? '✓' : ''}</div><span>${r.label}</span>`;
+    btn.onclick = () => toggleReminder(r.val, btn);
+    grid.appendChild(btn);
+  });
+}
+
+function toggleReminder(val, btn) {
+  const idx = state.reminders.indexOf(val);
+  if (idx >= 0) state.reminders.splice(idx, 1);
+  else state.reminders.push(val);
+  btn.classList.toggle('selected');
+  btn.querySelector('.check').textContent = state.reminders.includes(val) ? '✓' : '';
+}
+
+function buildMembers() {
+  const list = document.getElementById('members-list');
+  MEMBERS.forEach(m => {
+    const card = document.createElement('div');
+    card.className = 'member-card';
+    card.innerHTML = `
+      <div class="member-header">
+        <div class="member-avatar ${m.cls}">${m.initials}</div>
+        <div class="member-name">${m.name}</div>
+      </div>
+      <textarea class="task-input" placeholder="Что нужно сделать к звонку..." id="task-${m.name}" rows="2"></textarea>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function updateSubmit() {
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = !(state.date && state.time);
+}
+
+function submitCall() {
+  const tasks = {};
+  MEMBERS.forEach(m => {
+    const val = document.getElementById(`task-${m.name}`)?.value.trim();
+    if (val) tasks[m.name] = val;
+  });
+
+  const payload = {
+    date: state.date,
+    time: state.time,
+    reminders: state.reminders,
+    tasks,
+  };
+
+  if (tg) {
+    tg.sendData(JSON.stringify(payload));
+  }
+
+  showSuccess(payload);
+}
+
+function showSuccess(data) {
+  document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('submit-btn').style.display = 'none';
+
+  const screen = document.getElementById('success-screen');
+  screen.style.display = 'flex';
+
+  const dt = new Date(data.date + 'T' + data.time);
+  const dateStr = `${dt.getDate()} ${['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'][dt.getMonth()]}, ${data.time}`;
+
+  let html = `<div class="datetime">${dateStr}</div>`;
+  Object.entries(data.tasks).forEach(([who, what]) => {
+    html += `<div class="task-row"><span class="who">${who}</span><span class="what">${what}</span></div>`;
+  });
+  if (!Object.keys(data.tasks).length) {
+    html += `<div style="font-size:14px; color: var(--text2);">Без задач</div>`;
+  }
+  document.getElementById('call-preview').innerHTML = html;
+}
+
+buildDates();
+buildTimes();
+buildReminders();
+buildMembers();
+updateSubmit();
+</script>
+</body>
+</html>
